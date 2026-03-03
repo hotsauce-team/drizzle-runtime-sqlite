@@ -1,7 +1,7 @@
-.PHONY: clone-repos clean-repos test test-node22 test-node24 test-deno build lint fmt check
+.PHONY: clone-repo clean-repos test test-node22 test-node24 test-deno build lint fmt check
 
 # Clone Drizzle ORM repo for shared test suite
-clone-repos:
+clone-repo:
 	@mkdir -p repos
 	@if [ ! -d repos/drizzle-orm ]; then \
 		git clone --depth 1 https://github.com/drizzle-team/drizzle-orm.git repos/drizzle-orm; \

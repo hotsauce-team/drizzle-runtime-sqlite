@@ -138,13 +138,21 @@ This matches the sqlite-proxy specification. For most use cases, prefer the quer
 - Docker and Docker Compose
 - Make
 
+### Local Setup
+
+```bash
+# Enable pre-commit hooks (runs fmt/lint/check)
+git config core.hooksPath .githooks && \
+chmod +x .githooks/pre-commit
+```
+
 ### Running Tests
 
 Tests run in Docker containers to ensure consistent environments.
 
 ```bash
 # Clone Drizzle's shared test suite (required)
-make clone-repos
+make clone-repo
 
 # Run Deno 2.7.2 tests (default)
 make test-deno-2.7

@@ -22,15 +22,19 @@
 import { DatabaseSync } from "node:sqlite";
 import { drizzle as proxyDrizzle } from "drizzle-orm/sqlite-proxy";
 import type {
-  SqliteRemoteDatabase,
-  AsyncRemoteCallback,
   AsyncBatchRemoteCallback,
+  AsyncRemoteCallback,
+  SqliteRemoteDatabase,
 } from "drizzle-orm/sqlite-proxy";
-import { createCallback, createBatchCallback } from "./src/callback.ts";
+import { createBatchCallback, createCallback } from "./src/callback.ts";
 import type { DrizzleDenoSqliteConfig } from "./src/types.ts";
 
-export type { BatchItem, DrizzleDenoSqliteConfig, SqliteOptions } from "./src/types.ts";
-export { createCallback, createBatchCallback } from "./src/callback.ts";
+export type {
+  BatchItem,
+  DrizzleDenoSqliteConfig,
+  SqliteOptions,
+} from "./src/types.ts";
+export { createBatchCallback, createCallback } from "./src/callback.ts";
 
 /**
  * Create a Drizzle ORM instance backed by node:sqlite.
@@ -71,7 +75,10 @@ export function drizzle<
 export function drizzle<
   TSchema extends Record<string, unknown> = Record<string, never>,
 >(
-  clientOrPathOrConfig?: DatabaseSync | string | DrizzleDenoSqliteConfig<TSchema>,
+  clientOrPathOrConfig?:
+    | DatabaseSync
+    | string
+    | DrizzleDenoSqliteConfig<TSchema>,
   maybeConfig?: DrizzleDenoSqliteConfig<TSchema>,
 ): SqliteRemoteDatabase<TSchema> {
   let client: DatabaseSync;

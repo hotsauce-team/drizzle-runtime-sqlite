@@ -1,6 +1,6 @@
 /**
  * Integration tests using Drizzle's official shared test suite.
- * 
+ *
  * Runs the same tests as Node but using Deno's built-in node:sqlite.
  */
 
@@ -9,7 +9,11 @@ import type { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import { drizzle as proxyDrizzle } from "drizzle-orm/sqlite-proxy";
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 import { skipTests } from "./common.ts";
-import { createCallback, createBatchCallback, createClient } from "../../mod.ts";
+import {
+  createBatchCallback,
+  createCallback,
+  createClient,
+} from "../../mod.ts";
 import {
   tests,
   usersTable,
@@ -22,6 +26,7 @@ let client: ReturnType<typeof createClient>;
 function hasArrayMode(): boolean {
   const testClient = createClient(":memory:");
   const stmt = testClient.db.prepare("SELECT 1");
+  // deno-lint-ignore no-explicit-any
   const has = typeof (stmt as any).setReturnArrays === "function";
   testClient.db.close();
   return has;
@@ -29,7 +34,7 @@ function hasArrayMode(): boolean {
 
 const supportsArrayMode = hasArrayMode();
 
-beforeAll(async () => {
+beforeAll(() => {
   const dbPath = Deno.env.get("SQLITE_DB_PATH") ?? ":memory:";
   client = createClient(dbPath);
 
@@ -45,7 +50,7 @@ beforeEach((ctx) => {
   };
 });
 
-afterAll(async () => {
+afterAll(() => {
   client?.db.close();
 });
 
@@ -70,7 +75,9 @@ const requiresArrayMode = [
   "cross join",
 ];
 
-skipTests(supportsArrayMode ? alwaysSkip : [...alwaysSkip, ...requiresArrayMode]);
+skipTests(
+  supportsArrayMode ? alwaysSkip : [...alwaysSkip, ...requiresArrayMode],
+);
 
 tests();
 
@@ -89,14 +96,23 @@ beforeEach(async () => {
 });
 
 test("insert via db.get w/ query builder", async () => {
-  const inserted = await db.get<Pick<typeof usersTable.$inferSelect, "id" | "name">>(
-    db.insert(usersTable).values({ name: "John" }).returning({ id: usersTable.id, name: usersTable.name }),
+  const inserted = await db.get<
+    Pick<typeof usersTable.$inferSelect, "id" | "name">
+  >(
+    db.insert(usersTable).values({ name: "John" }).returning({
+      id: usersTable.id,
+      name: usersTable.name,
+    }),
   );
   expect(inserted).toEqual([1, "John"]);
 });
 
 test("insert via db.run + select via db.get", async () => {
-  await db.run(sql`insert into ${usersTable} (${new Name(usersTable.name.name)}) values (${"John"})`);
+  await db.run(
+    sql`insert into ${usersTable} (${new Name(
+      usersTable.name.name,
+    )}) values (${"John"})`,
+  );
 
   const result = await db.get<{ id: number; name: string }>(
     sql`select ${usersTable.id}, ${usersTable.name} from ${usersTable}`,
@@ -114,7 +130,11 @@ test("insert via db.get", async () => {
 });
 
 test("insert via db.run + select via db.all", async () => {
-  await db.run(sql`insert into ${usersTable} (${new Name(usersTable.name.name)}) values (${"John"})`);
+  await db.run(
+    sql`insert into ${usersTable} (${new Name(
+      usersTable.name.name,
+    )}) values (${"John"})`,
+  );
 
   const result = await db.all<{ id: number; name: string }>(
     sql`select ${usersTable.id}, ${usersTable.name} from ${usersTable}`,
