@@ -4,8 +4,17 @@
  * Clean room implementation based on Drizzle's sqlite-proxy contract.
  */
 
-import type { DatabaseSync, StatementSync, SupportedValueType } from "node:sqlite";
-import type { BatchItem, ProxyMethod, ProxyResult, SqliteOptions } from "./types.ts";
+import type {
+  DatabaseSync,
+  StatementSync,
+  SupportedValueType,
+} from "node:sqlite";
+import type {
+  BatchItem,
+  ProxyMethod,
+  ProxyResult,
+  SqliteOptions,
+} from "./types.ts";
 
 /**
  * Extended StatementSync interface for newer Node.js APIs not yet in Deno's types.
@@ -38,7 +47,9 @@ function applyStatementOptions(
     stmt.setAllowBareNamedParameters(options.allowBareNamedParameters);
   }
   if (options.allowUnknownNamedParameters !== undefined) {
-    asExtended(stmt).setAllowUnknownNamedParameters(options.allowUnknownNamedParameters);
+    asExtended(stmt).setAllowUnknownNamedParameters(
+      options.allowUnknownNamedParameters,
+    );
   }
 }
 
@@ -57,7 +68,8 @@ function rowToArray(
  * Check if the statement supports setReturnArrays (Node 22.16+/24+)
  */
 function hasArrayMode(stmt: StatementSync): boolean {
-  return typeof (stmt as unknown as ExtendedStatementMethods).setReturnArrays === "function";
+  return typeof (stmt as unknown as ExtendedStatementMethods)
+    .setReturnArrays === "function";
 }
 
 /**
@@ -88,7 +100,10 @@ function executeStatement(
       return { rows: [] };
     }
     case "get": {
-      const row = stmt.get(...typedParams) as unknown[] | Record<string, unknown> | undefined;
+      const row = stmt.get(...typedParams) as
+        | unknown[]
+        | Record<string, unknown>
+        | undefined;
       if (row === undefined) {
         return { rows: undefined };
       }
@@ -102,7 +117,10 @@ function executeStatement(
     }
     case "all":
     case "values": {
-      const rows = stmt.all(...typedParams) as unknown[][] | Record<string, unknown>[];
+      const rows = stmt.all(...typedParams) as unknown[][] | Record<
+        string,
+        unknown
+      >[];
       if (rows.length === 0) {
         return { rows: [] };
       }
@@ -112,7 +130,11 @@ function executeStatement(
       }
       // Convert objects to arrays using column metadata
       const columns = extStmt.columns();
-      return { rows: (rows as Record<string, unknown>[]).map((row) => rowToArray(row, columns)) };
+      return {
+        rows: (rows as Record<string, unknown>[]).map((row) =>
+          rowToArray(row, columns)
+        ),
+      };
     }
     default: {
       throw new Error(`Unknown method: ${method}`);

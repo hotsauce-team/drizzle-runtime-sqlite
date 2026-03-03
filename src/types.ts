@@ -63,5 +63,3 @@ export interface DrizzleDenoSqliteConfig<
    */
   logger?: boolean;
 }
-
-
