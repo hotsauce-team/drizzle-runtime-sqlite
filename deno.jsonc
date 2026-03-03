@@ -6,10 +6,12 @@
   "imports": {
     "drizzle-orm": "npm:drizzle-orm@0.45.1",
     "drizzle-orm/sqlite-core": "npm:drizzle-orm@0.45.1/sqlite-core",
-    "drizzle-orm/sqlite-proxy": "npm:drizzle-orm@0.45.1/sqlite-proxy"
+    "drizzle-orm/sqlite-proxy": "npm:drizzle-orm@0.45.1/sqlite-proxy",
+    "vitest": "npm:vitest@^1.6.0",
+    "vitest/config": "npm:vitest@^1.6.0/config"
   },
   "tasks": {
-    "test": "deno test --allow-all",
+    "test": "deno run -A npm:vitest run --config vitest.config.deno.ts",
     "lint": "deno lint",
     "fmt": "deno fmt",
     "check": "deno fmt --check && deno lint"
@@ -25,5 +27,6 @@
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true
-  }
+  },
+  "nodeModulesDir": "auto"
 }

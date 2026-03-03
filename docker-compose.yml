@@ -1,10 +1,23 @@
 services:
-  test-deno:
+  # Deno 2.6.0 (first version with stmt.columns - minimum supported)
+  test-deno-2.6:
     build:
       context: .
       dockerfile: Dockerfile.deno
+      args:
+        DENO_VERSION: "2.6.0"
     working_dir: /app
-    command: deno test --allow-all tests/sanity_test.ts
+    command: deno run -A npm:vitest run --config vitest.config.deno.ts
+
+  # Deno 2.7.2 (current target)
+  test-deno-2.7:
+    build:
+      context: .
+      dockerfile: Dockerfile.deno
+      args:
+        DENO_VERSION: "2.7.2"
+    working_dir: /app
+    command: deno run -A npm:vitest run --config vitest.config.deno.ts
 
   # Node tests (Step 1 - importing Drizzle shared test suite)
   test-node22:

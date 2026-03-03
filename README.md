@@ -53,29 +53,39 @@ client.db.exec("PRAGMA journal_mode = WAL");
 
 ## Requirements
 
-- Deno 2.2+ (for `node:sqlite` support)
+- Deno 2.6.0+ (first version with `stmt.columns()` support)
+  - Deno 2.7.0+: Full functionality with `setReturnArrays`
 - Node.js 22.16+ or 24.0+ (for full functionality)
   - Node 22.5.0-22.15.x: Works, but join queries may return incorrect column ordering due to missing `setReturnArrays`
 
 ## Limitations
 
-### Join Column Ordering (Node < 22.16)
+### Join Column Ordering (Deno < 2.7 / Node < 22.16)
 
-On Node.js versions before 22.16, this driver falls back to converting object rows to arrays using column metadata. This can produce incorrect results for joins that select columns with duplicate names:
+Without the `setReturnArrays` API, this driver falls back to converting object rows to arrays using column metadata. This can produce incorrect results for joins that select columns with duplicate names:
 
 ```ts
-// May return incorrect column ordering on older Node versions
+// May return incorrect column ordering on older runtime versions
 const result = await db
   .select({ userId: users.id, postId: posts.id })
   .from(users)
   .innerJoin(posts, eq(users.id, posts.userId));
 ```
 
-**Solution:** Use Node.js 22.16+ or 24+, which support the `setReturnArrays` API for correct ordering.
+**Solution:** Use Deno 2.7+ or Node.js 22.16+/24+, which support the `setReturnArrays` API for correct ordering.
+
+| Runtime | `stmt.columns()` | `setReturnArrays` | Status |
+|---------|------------------|-------------------|--------|
+| Deno < 2.6 | ❌ | ❌ | Not supported |
+| Deno 2.6.x | ✅ | ❌ | Works (join limitations) |
+| Deno 2.7+ | ✅ | ✅ | Full support |
+| Node < 22.5 | ❌ | ❌ | Not supported |
+| Node 22.5-22.15 | ✅ | ❌ | Works (join limitations) |
+| Node 22.16+/24+ | ✅ | ✅ | Full support |
 
 ### UPDATE/DELETE with LIMIT
 
-Node's `node:sqlite` bundles SQLite without the `SQLITE_ENABLE_UPDATE_DELETE_LIMIT` compile option. This means the following Drizzle operations will fail:
+Both Deno and Node's `node:sqlite` bundle SQLite without the `SQLITE_ENABLE_UPDATE_DELETE_LIMIT` compile option. This means the following Drizzle operations will fail:
 
 ```ts
 // ❌ Not supported
@@ -133,20 +143,23 @@ This matches the sqlite-proxy specification. For most use cases, prefer the quer
 Tests run in Docker containers to ensure consistent environments.
 
 ```bash
-# Clone Drizzle's shared test suite (required for Node tests)
+# Clone Drizzle's shared test suite (required)
 make clone-repos
 
-# Run tests on Node 22
+# Run Deno 2.7.2 tests (default)
+make test-deno-2.7
+
+# Run Deno 2.6.0 tests (minimum supported)
+make test-deno-2.6
+
+# Run Node 22 tests
 make test-node22
 
-# Run tests on Node 24
+# Run Node 24 tests
 make test-node24
-
-# Run Deno sanity tests
-make test-deno
 ```
 
-The Node tests use Drizzle's official shared test suite (~130 tests) to ensure compatibility with the sqlite-proxy pattern.
+All test targets use Drizzle's official shared test suite (~130 tests) to ensure compatibility with the sqlite-proxy pattern.
 
 ## License
 

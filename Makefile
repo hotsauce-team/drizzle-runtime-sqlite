@@ -14,18 +14,21 @@ clean-repos:
 	rm -rf repos/
 
 # Run all tests in Docker
-test: test-deno
+test: test-deno-2.7
 
-# Run Node + Vitest tests (Step 1: Drizzle shared suite)
+# Run Node + Vitest tests (Drizzle shared suite)
 test-node22:
 	docker compose run --rm test-node22
 
 test-node24:
 	docker compose run --rm test-node24
 
-# Run Deno tests (Step 2/3: sanity → full suite)
-test-deno:
-	docker compose run --rm test-deno
+# Run Deno + Vitest tests (Drizzle shared suite)
+test-deno-2.6:
+	docker compose run --rm test-deno-2.6
+
+test-deno-2.7:
+	docker compose run --rm test-deno-2.7
 
 # Build Docker images
 build:

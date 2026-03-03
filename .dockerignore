@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Docker files (not needed in context)
+Dockerfile.*
+docker-compose.yml
+
+# Build artifacts
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.*
+
+# Documentation (keep README for reference if needed)
+REVIEW.md
+LICENSE

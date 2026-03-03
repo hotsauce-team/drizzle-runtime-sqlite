@@ -1,20 +1,24 @@
-FROM denoland/deno:latest
+ARG DENO_VERSION=2.7.2
+FROM denoland/deno:${DENO_VERSION}
 
 WORKDIR /app
 
-# Copy dependency files first for better caching
+# Copy config files first for better caching
 COPY deno.jsonc .
+COPY package.json .
+COPY vitest.config.deno.ts .
 
-# Copy source files
+# Install dependencies
+RUN deno install
+
+# Copy source and test files
 COPY mod.ts .
 COPY src/ src/
+COPY tests/ tests/
+COPY repos/ repos/
 
-# Copy only Deno tests (not Node tests)
-COPY tests/sanity_test.ts tests/
+# Cache modules
+RUN deno cache mod.ts
 
-# Install npm dependencies and cache
-RUN deno install
-RUN deno cache mod.ts tests/sanity_test.ts
-
-# Default command
-CMD ["deno", "test", "--allow-all", "tests/sanity_test.ts"]
+# Default command - run full test suite
+CMD ["deno", "run", "-A", "npm:vitest", "run", "--config", "vitest.config.deno.ts"]
