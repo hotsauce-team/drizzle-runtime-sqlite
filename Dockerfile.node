@@ -1,0 +1,16 @@
+ARG NODE_VERSION=22
+FROM node:${NODE_VERSION}-slim
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source and test files
+COPY . .
+
+# Default command
+CMD ["npm", "test"]

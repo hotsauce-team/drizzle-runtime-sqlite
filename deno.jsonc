@@ -1,0 +1,29 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@hotsauce/drizzle-deno-sqlite",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "drizzle-orm": "npm:drizzle-orm@0.45.1",
+    "drizzle-orm/sqlite-core": "npm:drizzle-orm@0.45.1/sqlite-core",
+    "drizzle-orm/sqlite-proxy": "npm:drizzle-orm@0.45.1/sqlite-proxy"
+  },
+  "tasks": {
+    "test": "deno test --allow-all",
+    "lint": "deno lint",
+    "fmt": "deno fmt",
+    "check": "deno fmt --check && deno lint"
+  },
+  "lint": {
+    "include": ["src/", "tests/", "mod.ts"],
+    "exclude": ["repos/"]
+  },
+  "fmt": {
+    "include": ["src/", "tests/", "mod.ts"],
+    "exclude": ["repos/"]
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  }
+}

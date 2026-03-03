@@ -1,0 +1,20 @@
+FROM denoland/deno:latest
+
+WORKDIR /app
+
+# Copy dependency files first for better caching
+COPY deno.jsonc .
+
+# Copy source files
+COPY mod.ts .
+COPY src/ src/
+
+# Copy only Deno tests (not Node tests)
+COPY tests/sanity_test.ts tests/
+
+# Install npm dependencies and cache
+RUN deno install
+RUN deno cache mod.ts tests/sanity_test.ts
+
+# Default command
+CMD ["deno", "test", "--allow-all", "tests/sanity_test.ts"]

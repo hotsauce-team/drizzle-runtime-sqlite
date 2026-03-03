@@ -1,0 +1,24 @@
+# Dependencies
+repos/
+node_modules/
+
+# Deno
+.deno/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Test databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Build outputs
+dist/
+
+# Lock files (use deno.lock for Deno)
+package-lock.json

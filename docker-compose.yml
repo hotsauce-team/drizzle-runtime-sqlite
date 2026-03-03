@@ -1,0 +1,32 @@
+services:
+  test-deno:
+    build:
+      context: .
+      dockerfile: Dockerfile.deno
+    working_dir: /app
+    command: deno test --allow-all tests/sanity_test.ts
+
+  # Node tests (Step 1 - importing Drizzle shared test suite)
+  test-node22:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+      args:
+        NODE_VERSION: 22
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm test
+
+  test-node24:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+      args:
+        NODE_VERSION: 24
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm test
