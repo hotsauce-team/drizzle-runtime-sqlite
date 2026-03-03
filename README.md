@@ -144,7 +144,7 @@ Tests run in Docker containers to ensure consistent environments.
 
 ```bash
 # Clone Drizzle's shared test suite (required)
-make clone-repos
+make clone-repo
 
 # Run Deno 2.7.2 tests (default)
 make test-deno-2.7
