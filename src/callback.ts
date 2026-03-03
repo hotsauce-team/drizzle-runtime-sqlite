@@ -5,7 +5,7 @@
  */
 
 import type { DatabaseSync, StatementSync, SupportedValueType } from "node:sqlite";
-import type { ProxyMethod, ProxyResult, SqliteOptions } from "./types.ts";
+import type { BatchItem, ProxyMethod, ProxyResult, SqliteOptions } from "./types.ts";
 
 /**
  * Extended StatementSync interface for newer Node.js APIs not yet in Deno's types.
@@ -15,6 +15,31 @@ interface ExtendedStatementMethods {
   columns(): { name: string }[];
   setReturnArrays(enabled: boolean): void;
   setAllowUnknownNamedParameters(enabled: boolean): void;
+}
+
+/**
+ * Cast a StatementSync to include extended methods.
+ */
+function asExtended(stmt: StatementSync): ExtendedStatementMethods {
+  return stmt as unknown as ExtendedStatementMethods;
+}
+
+/**
+ * Apply statement options from SqliteOptions to a prepared statement.
+ */
+function applyStatementOptions(
+  stmt: StatementSync,
+  options: SqliteOptions,
+): void {
+  if (options.readBigInts) {
+    stmt.setReadBigInts(true);
+  }
+  if (options.allowBareNamedParameters !== undefined) {
+    stmt.setAllowBareNamedParameters(options.allowBareNamedParameters);
+  }
+  if (options.allowUnknownNamedParameters !== undefined) {
+    asExtended(stmt).setAllowUnknownNamedParameters(options.allowUnknownNamedParameters);
+  }
 }
 
 /**
@@ -49,7 +74,7 @@ function executeStatement(
   method: ProxyMethod,
 ): ProxyResult {
   // Try to use array mode if available (Node 22.16+/24+)
-  const extStmt = stmt as unknown as ExtendedStatementMethods;
+  const extStmt = asExtended(stmt);
   const useArrayMode = hasArrayMode(stmt);
   if (useArrayMode) {
     extStmt.setReturnArrays(true);
@@ -98,6 +123,9 @@ function executeStatement(
 /**
  * Create an async callback function for Drizzle's sqlite-proxy.
  *
+ * Note: The underlying `node:sqlite` operations are synchronous. The async
+ * signature is required to match Drizzle's `AsyncRemoteCallback` interface.
+ *
  * @param db - node:sqlite DatabaseSync instance
  * @param options - Statement execution options
  * @returns Async callback matching Drizzle's AsyncRemoteCallback signature
@@ -110,38 +138,22 @@ export function createCallback(
   params: unknown[],
   method: ProxyMethod,
 ) => Promise<ProxyResult> {
-  return async (
+  return (
     sql: string,
     params: unknown[],
     method: ProxyMethod,
   ): Promise<ProxyResult> => {
     const stmt = db.prepare(sql);
-    const extStmt = stmt as unknown as ExtendedStatementMethods;
-
-    // Apply statement options
-    if (options.readBigInts) {
-      stmt.setReadBigInts(true);
-    }
-    if (options.allowBareNamedParameters !== undefined) {
-      stmt.setAllowBareNamedParameters(options.allowBareNamedParameters);
-    }
-    if (options.allowUnknownNamedParameters !== undefined) {
-      extStmt.setAllowUnknownNamedParameters(options.allowUnknownNamedParameters);
-    }
-
-    return executeStatement(stmt, params, method);
+    applyStatementOptions(stmt, options);
+    return Promise.resolve(executeStatement(stmt, params, method));
   };
-}
-
-/** Batch query item matching Drizzle's contract */
-export interface BatchItem {
-  sql: string;
-  params: unknown[];
-  method: ProxyMethod;
 }
 
 /**
  * Create an async batch callback function for Drizzle's sqlite-proxy.
+ *
+ * Note: The underlying `node:sqlite` operations are synchronous. The async
+ * signature is required to match Drizzle's `AsyncBatchRemoteCallback` interface.
  *
  * @param db - node:sqlite DatabaseSync instance
  * @param options - Statement execution options
@@ -151,27 +163,15 @@ export function createBatchCallback(
   db: DatabaseSync,
   options: SqliteOptions = {},
 ): (batch: BatchItem[]) => Promise<ProxyResult[]> {
-  return async (batch: BatchItem[]): Promise<ProxyResult[]> => {
+  return (batch: BatchItem[]): Promise<ProxyResult[]> => {
     const results: ProxyResult[] = [];
 
     for (const item of batch) {
       const stmt = db.prepare(item.sql);
-      const extStmt = stmt as unknown as ExtendedStatementMethods;
-
-      // Apply statement options
-      if (options.readBigInts) {
-        stmt.setReadBigInts(true);
-      }
-      if (options.allowBareNamedParameters !== undefined) {
-        stmt.setAllowBareNamedParameters(options.allowBareNamedParameters);
-      }
-      if (options.allowUnknownNamedParameters !== undefined) {
-        extStmt.setAllowUnknownNamedParameters(options.allowUnknownNamedParameters);
-      }
-
+      applyStatementOptions(stmt, options);
       results.push(executeStatement(stmt, item.params, item.method));
     }
 
-    return results;
+    return Promise.resolve(results);
   };
 }

@@ -9,7 +9,14 @@ export type ProxyMethod = "run" | "all" | "get" | "values";
 
 /** Result shape expected by Drizzle's sqlite-proxy */
 export interface ProxyResult {
-  rows: any[] | undefined;
+  rows: unknown[] | unknown[][] | undefined;
+}
+
+/** Batch query item matching Drizzle's contract */
+export interface BatchItem {
+  sql: string;
+  params: unknown[];
+  method: ProxyMethod;
 }
 
 /** Options passed to node:sqlite statement execution */
@@ -57,23 +64,4 @@ export interface DrizzleDenoSqliteConfig<
   logger?: boolean;
 }
 
-/** Column metadata from statement */
-export interface ColumnInfo {
-  name: string;
-}
 
-/** SQLite value types for input */
-export type SQLInputValue =
-  | null
-  | number
-  | bigint
-  | string
-  | Uint8Array;
-
-/** SQLite value types for output */
-export type SQLOutputValue =
-  | null
-  | number
-  | bigint
-  | string
-  | Uint8Array;

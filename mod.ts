@@ -29,7 +29,7 @@ import type {
 import { createCallback, createBatchCallback } from "./src/callback.ts";
 import type { DrizzleDenoSqliteConfig } from "./src/types.ts";
 
-export type { DrizzleDenoSqliteConfig, SqliteOptions } from "./src/types.ts";
+export type { BatchItem, DrizzleDenoSqliteConfig, SqliteOptions } from "./src/types.ts";
 export { createCallback, createBatchCallback } from "./src/callback.ts";
 
 /**

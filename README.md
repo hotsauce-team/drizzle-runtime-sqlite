@@ -59,6 +59,20 @@ client.db.exec("PRAGMA journal_mode = WAL");
 
 ## Limitations
 
+### Join Column Ordering (Node < 22.16)
+
+On Node.js versions before 22.16, this driver falls back to converting object rows to arrays using column metadata. This can produce incorrect results for joins that select columns with duplicate names:
+
+```ts
+// May return incorrect column ordering on older Node versions
+const result = await db
+  .select({ userId: users.id, postId: posts.id })
+  .from(users)
+  .innerJoin(posts, eq(users.id, posts.userId));
+```
+
+**Solution:** Use Node.js 22.16+ or 24+, which support the `setReturnArrays` API for correct ordering.
+
 ### UPDATE/DELETE with LIMIT
 
 Node's `node:sqlite` bundles SQLite without the `SQLITE_ENABLE_UPDATE_DELETE_LIMIT` compile option. This means the following Drizzle operations will fail:
