@@ -26,6 +26,7 @@ let client: ReturnType<typeof createClient>;
 function hasArrayMode(): boolean {
   const testClient = createClient(":memory:");
   const stmt = testClient.db.prepare("SELECT 1");
+  // deno-lint-ignore no-explicit-any
   const has = typeof (stmt as any).setReturnArrays === "function";
   testClient.db.close();
   return has;
@@ -33,7 +34,7 @@ function hasArrayMode(): boolean {
 
 const supportsArrayMode = hasArrayMode();
 
-beforeAll(async () => {
+beforeAll(() => {
   const dbPath = Deno.env.get("SQLITE_DB_PATH") ?? ":memory:";
   client = createClient(dbPath);
 
@@ -49,7 +50,7 @@ beforeEach((ctx) => {
   };
 });
 
-afterAll(async () => {
+afterAll(() => {
   client?.db.close();
 });
 
