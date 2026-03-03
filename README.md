@@ -138,6 +138,14 @@ This matches the sqlite-proxy specification. For most use cases, prefer the quer
 - Docker and Docker Compose
 - Make
 
+### Local Setup
+
+```bash
+# Enable pre-commit hooks (runs fmt/lint/check)
+git config core.hooksPath .githooks && \
+chmod +x .githooks/pre-commit
+```
+
 ### Running Tests
 
 Tests run in Docker containers to ensure consistent environments.
