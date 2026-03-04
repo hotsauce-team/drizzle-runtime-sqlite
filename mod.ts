@@ -4,7 +4,7 @@
  *
  * @example
  * ```ts
- * import { drizzle } from "@hotsauce/drizzle-deno-sqlite";
+ * import { drizzle } from "@hotsauce/drizzle-runtime-sqlite";
  * import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
  *
  * const users = sqliteTable("users", {

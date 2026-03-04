@@ -1,5 +1,5 @@
 {
-  "name": "drizzle-deno-sqlite-tests",
+  "name": "drizzle-runtime-sqlite-tests",
   "private": true,
   "type": "module",
   "scripts": {

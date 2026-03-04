@@ -1,5 +1,5 @@
 /**
- * TypeScript interfaces for drizzle-deno-sqlite
+ * TypeScript interfaces for drizzle-runtime-sqlite
  */
 
 import type { DatabaseSync } from "node:sqlite";

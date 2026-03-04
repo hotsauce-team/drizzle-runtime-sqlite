@@ -1,4 +1,4 @@
-# @hotsauce/drizzle-deno-sqlite
+# @hotsauce/drizzle-runtime-sqlite
 
 Drizzle ORM adapter for Deno's built-in `node:sqlite` module.
 
@@ -8,7 +8,7 @@ Drizzle ORM adapter for Deno's built-in `node:sqlite` module.
 // deno.json
 {
   "imports": {
-    "@hotsauce/drizzle-deno-sqlite": "jsr:@hotsauce/drizzle-deno-sqlite@^0.1.0",
+    "@hotsauce/drizzle-runtime-sqlite": "jsr:@hotsauce/drizzle-runtime-sqlite@^0.1.0",
     "drizzle-orm": "npm:drizzle-orm@^0.45.0"
   }
 }
@@ -17,7 +17,7 @@ Drizzle ORM adapter for Deno's built-in `node:sqlite` module.
 ## Usage
 
 ```ts
-import { drizzle } from "@hotsauce/drizzle-deno-sqlite";
+import { drizzle } from "@hotsauce/drizzle-runtime-sqlite";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 const users = sqliteTable("users", {
@@ -42,7 +42,7 @@ If you need more control, use `createClient()` with drizzle-orm's sqlite-proxy:
 
 ```ts
 import { drizzle } from "drizzle-orm/sqlite-proxy";
-import { createClient } from "@hotsauce/drizzle-deno-sqlite";
+import { createClient } from "@hotsauce/drizzle-runtime-sqlite";
 
 const client = createClient(":memory:");
 const db = drizzle(client.run, client.batch, { schema: { users } });
