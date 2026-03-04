@@ -51,6 +51,21 @@ const db = drizzle(client.run, client.batch, { schema: { users } });
 client.db.exec("PRAGMA journal_mode = WAL");
 ```
 
+### Drizzle Kit Driver (Experimental)
+
+A drop-in replacement for better-sqlite3 in drizzle-kit's connections is available:
+
+```ts
+import { createDrizzleKitDriver } from "@hotsauce/drizzle-runtime-sqlite/kit";
+
+const driver = await createDrizzleKitDriver({ url: "./database.db" });
+
+// Returns drizzle-kit compatible interface:
+// { query, run, proxy, transactionProxy, migrate, packageName: "node:sqlite" }
+```
+
+> **Note:** This driver is intended for integration into drizzle-kit itself and is not currently tested independently. Use at your own risk.
+
 ## Requirements
 
 - Deno 2.6.0+ (first version with `stmt.columns()` support)

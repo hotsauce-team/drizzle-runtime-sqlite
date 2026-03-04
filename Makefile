@@ -14,7 +14,7 @@ clean-repos:
 	rm -rf repos/
 
 # Run all tests in Docker
-test: test-deno-2.7
+test: test-node22 test-node24 test-deno-2.6 test-deno-2.7
 
 # Run Node + Vitest tests (Drizzle shared suite)
 test-node22:

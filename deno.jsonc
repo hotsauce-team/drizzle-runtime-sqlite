@@ -1,11 +1,16 @@
 {
   "name": "@hotsauce/drizzle-runtime-sqlite",
-  "version": "0.1.0",
-  "exports": "./mod.ts",
+  "version": "0.1.1",
+  "exports": {
+    ".": "./mod.ts",
+    "./kit": "./src/kit.ts"
+  },
   "imports": {
     "drizzle-orm": "npm:drizzle-orm@0.45.1",
     "drizzle-orm/sqlite-core": "npm:drizzle-orm@0.45.1/sqlite-core",
     "drizzle-orm/sqlite-proxy": "npm:drizzle-orm@0.45.1/sqlite-proxy",
+    "drizzle-orm/migrator": "npm:drizzle-orm@0.45.1/migrator",
+    "drizzle-orm/sqlite-proxy/migrator": "npm:drizzle-orm@0.45.1/sqlite-proxy/migrator",
     "vitest": "npm:vitest@^1.6.0",
     "vitest/config": "npm:vitest@^1.6.0/config"
   },

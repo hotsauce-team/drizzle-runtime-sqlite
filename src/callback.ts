@@ -15,23 +15,7 @@ import type {
   ProxyResult,
   SqliteOptions,
 } from "./types.ts";
-
-/**
- * Extended StatementSync interface for newer Node.js APIs not yet in Deno's types.
- * These APIs exist in Node 22.16+/24+.
- */
-interface ExtendedStatementMethods {
-  columns(): { name: string }[];
-  setReturnArrays(enabled: boolean): void;
-  setAllowUnknownNamedParameters(enabled: boolean): void;
-}
-
-/**
- * Cast a StatementSync to include extended methods.
- */
-function asExtended(stmt: StatementSync): ExtendedStatementMethods {
-  return stmt as unknown as ExtendedStatementMethods;
-}
+import { asExtended, executeWithArrayMode } from "./shared.ts";
 
 /**
  * Apply statement options from SqliteOptions to a prepared statement.
@@ -54,25 +38,6 @@ function applyStatementOptions(
 }
 
 /**
- * Convert an object row to an array using column order from statement metadata.
- * Note: This doesn't work correctly for joins with duplicate column names.
- */
-function rowToArray(
-  row: Record<string, unknown>,
-  columns: { name: string }[],
-): unknown[] {
-  return columns.map((col) => row[col.name]);
-}
-
-/**
- * Check if the statement supports setReturnArrays (Node 22.16+/24+)
- */
-function hasArrayMode(stmt: StatementSync): boolean {
-  return typeof (stmt as unknown as ExtendedStatementMethods)
-    .setReturnArrays === "function";
-}
-
-/**
  * Execute a prepared statement based on the method type.
  *
  * @param stmt - Prepared statement
@@ -85,61 +50,8 @@ function executeStatement(
   params: unknown[],
   method: ProxyMethod,
 ): ProxyResult {
-  // Try to use array mode if available (Node 22.16+/24+)
-  const extStmt = asExtended(stmt);
-  const useArrayMode = hasArrayMode(stmt);
-  if (useArrayMode) {
-    extStmt.setReturnArrays(true);
-  }
-
   const typedParams = params as SupportedValueType[];
-
-  switch (method) {
-    case "run": {
-      stmt.run(...typedParams);
-      return { rows: [] };
-    }
-    case "get": {
-      const row = stmt.get(...typedParams) as
-        | unknown[]
-        | Record<string, unknown>
-        | undefined;
-      if (row === undefined) {
-        return { rows: undefined };
-      }
-      if (useArrayMode) {
-        // Already an array
-        return { rows: row as unknown[] };
-      }
-      // Convert object to array using column metadata
-      const columns = extStmt.columns();
-      return { rows: rowToArray(row as Record<string, unknown>, columns) };
-    }
-    case "all":
-    case "values": {
-      const rows = stmt.all(...typedParams) as unknown[][] | Record<
-        string,
-        unknown
-      >[];
-      if (rows.length === 0) {
-        return { rows: [] };
-      }
-      if (useArrayMode) {
-        // Already arrays
-        return { rows: rows as unknown[][] };
-      }
-      // Convert objects to arrays using column metadata
-      const columns = extStmt.columns();
-      return {
-        rows: (rows as Record<string, unknown>[]).map((row) =>
-          rowToArray(row, columns)
-        ),
-      };
-    }
-    default: {
-      throw new Error(`Unknown method: ${method}`);
-    }
-  }
+  return executeWithArrayMode(stmt, typedParams, method) as ProxyResult;
 }
 
 /**
