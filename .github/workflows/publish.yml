@@ -44,5 +44,8 @@ jobs:
       - name: Restore lockfile (tests may modify it due to Deno version differences)
         run: git checkout deno.lock
 
+      - name: Build generated files
+        run: deno task build:kit-string
+
       - name: Publish to JSR
         run: deno publish

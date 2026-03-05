@@ -150,6 +150,7 @@ This matches the sqlite-proxy specification. For most use cases, prefer the quer
 
 ### Prerequisites
 
+- Deno 2.x (with `--unstable-bundle` for building kit-string)
 - Docker and Docker Compose
 - Make
 
@@ -159,6 +160,21 @@ This matches the sqlite-proxy specification. For most use cases, prefer the quer
 # Enable pre-commit hooks (runs fmt/lint/check)
 git config core.hooksPath .githooks && \
 chmod +x .githooks/pre-commit
+```
+
+### Building Generated Files
+
+The `./kit-string` export is generated from `src/kit.ts` and must be built before publishing:
+
+```bash
+# Generate dist/kit-string.ts (required before deno publish)
+deno task build:kit-string
+```
+
+CI runs this automatically before `deno publish`. For local publishing:
+
+```bash
+deno task build:kit-string && deno publish
 ```
 
 ### Running Tests

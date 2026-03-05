@@ -4,14 +4,12 @@
  * Provides a drop-in replacement for better-sqlite3 in drizzle-kit's connections.
  */
 
-import { DatabaseSync } from "node:sqlite";
 import type { MigrationConfig } from "drizzle-orm/migrator";
 import {
   asExtended,
   executeWithArrayMode,
   hasArrayMode,
-  normaliseSQLiteUrl,
-  prepareSqliteParams,
+  hasColumns,
   rowToArray,
 } from "./shared.ts";
 
@@ -25,6 +23,13 @@ export interface SQLiteDB {
  * Proxy params matching drizzle-kit's ProxyParams.
  * This is a practical subset - drizzle-kit's full type has mode/method required,
  * but SQLite proxy paths don't always provide them.
+ *
+ * Method behaviors:
+ * - `run`: executes statement, returns []
+ * - `all`: returns all rows as array
+ * - `get`: returns all rows (drizzle-kit expects array, not single row)
+ * - `values`: same as `all`
+ * - `execute`: treated as `run` (executes statement, returns [])
  */
 export interface ProxyParams {
   sql: string;
@@ -47,11 +52,6 @@ export type TransactionProxy = (
   queries: TransactionQuery[],
 ) => Promise<(unknown[] | Error)[]>;
 
-/** Credentials for SQLite connection */
-export interface SqliteCredentials {
-  url: string;
-}
-
 /** Return type of createDrizzleKitDriver */
 export interface DrizzleKitDriver extends SQLiteDB {
   packageName: "node:sqlite";
@@ -66,24 +66,27 @@ export interface DrizzleKitDriver extends SQLiteDB {
  * This provides the same interface as drizzle-kit's better-sqlite3 driver,
  * allowing it to be used as a drop-in replacement.
  *
- * @param credentials - SQLite credentials with url property
+ * @param dbPath - Path to the SQLite database file (already normalised)
+ * @param prepareSqliteParams - Function to prepare params (from drizzle-kit)
  * @returns Driver object compatible with drizzle-kit
  *
  * @example
  * ```ts
  * import { createDrizzleKitDriver } from "@hotsauce/drizzle-runtime-sqlite/kit";
  *
- * const driver = await createDrizzleKitDriver({ url: "./database.db" });
+ * const driver = await createDrizzleKitDriver("./database.db", prepareSqliteParams);
  * // Use with drizzle-kit internals
  * ```
  */
-export async function createDrizzleKitDriver(
-  credentials: SqliteCredentials,
+export async function createNodeSqlDriver(
+  dbPath: string,
+  prepareSqliteParams: (params: unknown[]) => unknown[],
 ): Promise<DrizzleKitDriver> {
+  const { DatabaseSync } = await import("node:sqlite");
   const { drizzle } = await import("drizzle-orm/sqlite-proxy");
   const { migrate } = await import("drizzle-orm/sqlite-proxy/migrator");
 
-  const sqlite = new DatabaseSync(normaliseSQLiteUrl(credentials.url));
+  const sqlite = new DatabaseSync(dbPath);
 
   /**
    * Callback for sqlite-proxy following its expected semantics.
@@ -100,9 +103,10 @@ export async function createDrizzleKitDriver(
     return executeWithArrayMode(stmt, params, method);
   };
 
-  // Create drizzle instance for migrations (internal use only)
+  // Create drizzle instance for migrations (internal use only).
+  // This instance is NOT exposed for general queries - only migrate() uses it.
   // Note: drizzle's AsyncRemoteCallback expects { rows: any[] }, but sqlite-proxy
-  // semantics return undefined for get() with no row. We coerce here since
+  // semantics return undefined for get() with no row. We coerce to [] since
   // migrations only use "run" method which always returns { rows: [] }.
   const drzl = drizzle((sql, params, method) => {
     const result = sqliteProxyCallback(sql, params as unknown[], method);
@@ -155,6 +159,11 @@ export async function createDrizzleKitDriver(
 
       if (params.mode === "array" && !useArrayMode && rows.length > 0) {
         // Fallback: convert objects to arrays using column metadata
+        if (!hasColumns(stmt)) {
+          throw new Error(
+            "node:sqlite: stmt.columns() not available. Upgrade to Deno 2.6+ or Node.js 22.5+.",
+          );
+        }
         const columns = asExtended(stmt).columns();
         return Promise.resolve(
           (rows as Record<string, unknown>[]).map((row) =>
