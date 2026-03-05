@@ -35,5 +35,8 @@
     "strict": true,
     "noImplicitAny": true
   },
+  "publish": {
+    "exclude": ["!dist/kit-string.ts"]
+  },
   "nodeModulesDir": "auto"
 }
