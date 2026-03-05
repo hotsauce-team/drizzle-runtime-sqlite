@@ -9,6 +9,7 @@ import {
   asExtended,
   executeWithArrayMode,
   hasArrayMode,
+  hasColumns,
   rowToArray,
 } from "./shared.ts";
 
@@ -102,9 +103,10 @@ export async function createNodeSqlDriver(
     return executeWithArrayMode(stmt, params, method);
   };
 
-  // Create drizzle instance for migrations (internal use only)
+  // Create drizzle instance for migrations (internal use only).
+  // This instance is NOT exposed for general queries - only migrate() uses it.
   // Note: drizzle's AsyncRemoteCallback expects { rows: any[] }, but sqlite-proxy
-  // semantics return undefined for get() with no row. We coerce here since
+  // semantics return undefined for get() with no row. We coerce to [] since
   // migrations only use "run" method which always returns { rows: [] }.
   const drzl = drizzle((sql, params, method) => {
     const result = sqliteProxyCallback(sql, params as unknown[], method);
@@ -157,6 +159,11 @@ export async function createNodeSqlDriver(
 
       if (params.mode === "array" && !useArrayMode && rows.length > 0) {
         // Fallback: convert objects to arrays using column metadata
+        if (!hasColumns(stmt)) {
+          throw new Error(
+            "node:sqlite: stmt.columns() not available. Upgrade to Deno 2.6+ or Node.js 22.5+.",
+          );
+        }
         const columns = asExtended(stmt).columns();
         return Promise.resolve(
           (rows as Record<string, unknown>[]).map((row) =>
